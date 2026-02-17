@@ -1,0 +1,74 @@
+name: Build and Publish
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - target: chrome
+            output: .output/chrome-mv3
+            script: build
+          - target: firefox
+            output: .output/firefox-mv2
+            script: build:firefox
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1"
+      - run: bun install
+      - run: bun run ${{ matrix.script }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.target }}-build
+          path: ${{ matrix.output }}
+          retention-days: 7
+
+  publish-chrome:
+    needs: build
+    if: github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1"
+      - uses: actions/download-artifact@v4
+        with:
+          name: chrome-build
+          path: .output/chrome-mv3
+      - run: bun add -g web-ext
+      - name: Publish to Chrome Web Store
+        run: web-ext sign --channel stable --api-key ${{ vars.CHROME_CLIENT_ID }} --api-secret ${{ secrets.CHROME_CLIENT_SECRET }} --refresh-token ${{ secrets.CHROME_REFRESH_TOKEN }} --extension-id ${{ vars.CHROME_EXTENSION_ID }}
+        env:
+          CHROME_CLIENT_ID: ${{ vars.CHROME_CLIENT_ID }}
+          CHROME_CLIENT_SECRET: ${{ secrets.CHROME_CLIENT_SECRET }}
+          CHROME_REFRESH_TOKEN: ${{ secrets.CHROME_REFRESH_TOKEN }}
+          CHROME_EXTENSION_ID: ${{ vars.CHROME_EXTENSION_ID }}
+
+  publish-firefox:
+    needs: build
+    if: github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1"
+      - uses: actions/download-artifact@v4
+        with:
+          name: firefox-build
+          path: .output/firefox-mv2
+      - run: bun add -g web-ext
+      - name: Publish to Firefox Add-ons
+        run: web-ext sign --channel stable --api-key ${{ vars.FIREFOX_JWT_ISSUER }} --api-secret ${{ secrets.FIREFOX_JWT_SECRET }}
+        env:
+          FIREFOX_JWT_ISSUER: ${{ vars.FIREFOX_JWT_ISSUER }}
+          FIREFOX_JWT_SECRET: ${{ secrets.FIREFOX_JWT_SECRET }}

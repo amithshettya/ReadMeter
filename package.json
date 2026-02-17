@@ -1,6 +1,6 @@
 {
-  "name": "wxt-svelte-starter",
-  "description": "manifest.json description",
+  "name": "readmeter",
+  "description": "Track your reading progress",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -16,6 +16,7 @@
   },
   "devDependencies": {
     "@tsconfig/svelte": "^5.0.7",
+    "@wxt-dev/auto-icons": "^1.1.0",
     "@wxt-dev/module-svelte": "^2.0.4",
     "svelte": "^5.49.2",
     "svelte-check": "^4.3.6",
