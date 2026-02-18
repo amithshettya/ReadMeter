@@ -82,10 +82,12 @@ export default defineContentScript({
       isTracking = true;
       progressBar = document.createElement('div');
       progressBar.id = 'readmeter-progress';
-      progressBar.innerHTML = `
-        <div id="readmeter-fill"></div>
-        <span id="readmeter-text"></span>
-      `;
+      const fill = document.createElement('div');
+      fill.id = 'readmeter-fill';
+      const text = document.createElement('span');
+      text.id = 'readmeter-text';
+      progressBar.appendChild(fill);
+      progressBar.appendChild(text);
 
       const style = document.createElement('style');
       style.textContent = `
